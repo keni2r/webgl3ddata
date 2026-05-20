@@ -17,11 +17,16 @@
 
         var createScene = function () {
             var scene = new BABYLON.Scene(engine);
+            // 기본 카메라와 조명 생성
             scene.createDefaultCameraOrLight(true, true, true);
 
-            // 로컬 경로의 파일 불러오기 (예: 다운받은 폴더 내에 model.glb가 있다고 가정)
-            BABYLON.SceneLoader.ImportMeshAsync("", "./", "model.glb", scene).then((result) => {
+            // 링크 수정된 부분: 실제 폴더 경로("./source/model/")와 파일명("scene.gltf") 지정
+            BABYLON.SceneLoader.ImportMeshAsync("", "./source/model/", "scene.gltf", scene).then((result) => {
+                // 모델 로딩 완료 후 카메라가 마우스 컨트롤을 따르도록 설정
                 scene.activeCamera.attachControl(canvas, false);
+                
+                // (선택사항) 모델이 너무 작거나 크면 아래 주석을 풀고 화면에 맞출 수 있습니다.
+                // scene.activeCamera.alpha += Math.PI;
             });
 
             return scene;
@@ -32,6 +37,7 @@
             scene.render();
         });
 
+        // 브라우저 창 크기 조절 시 캔버스 크기 자동 맞춤
         window.addEventListener("resize", function () {
             engine.resize();
         });
