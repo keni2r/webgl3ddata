@@ -26,16 +26,11 @@
             camera.lowerRadiusLimit = 1; 
             camera.upperRadiusLimit = 50; 
 
-            // ==========================================
             // 1. 전체 UI 캔버스 생성
-            // ==========================================
             var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
-            // ==========================================
             // 2. 지시선 및 이름표 생성 함수
-            // ==========================================
             var createLabel = function(mesh, text, offsetX, offsetY, color) {
-                // [이름표 배경 박스]
                 var label = new BABYLON.GUI.Rectangle("label");
                 label.background = "rgba(0, 0, 0, 0.7)";
                 label.height = "35px";
@@ -43,19 +38,17 @@
                 label.cornerRadius = 10;
                 label.thickness = 2;
                 label.color = color;
-                label.linkOffsetY = offsetY; // Y축으로 띄울 픽셀 거리
-                label.linkOffsetX = offsetX; // X축으로 띄울 픽셀 거리
+                label.linkOffsetY = offsetY; 
+                label.linkOffsetX = offsetX; 
                 advancedTexture.addControl(label);
-                label.linkWithMesh(mesh); // 3D 메쉬를 따라다니도록 링크!
+                label.linkWithMesh(mesh); 
 
-                // [이름표 텍스트]
                 var textBlock = new BABYLON.GUI.TextBlock();
                 textBlock.text = text;
                 textBlock.color = "white";
                 textBlock.fontWeight = "bold";
                 label.addControl(textBlock);
 
-                // [타겟 점 (모델 표면에 붙을 동그라미)]
                 var target = new BABYLON.GUI.Ellipse();
                 target.width = "12px";
                 target.height = "12px";
@@ -63,67 +56,59 @@
                 target.thickness = 2;
                 target.background = "rgba(0, 0, 0, 0.5)";
                 advancedTexture.addControl(target);
-                target.linkWithMesh(mesh); // 타겟 점도 메쉬에 링크!
+                target.linkWithMesh(mesh); 
 
-                // [지시선 (고무줄처럼 늘어나는 선)]
                 var line = new BABYLON.GUI.Line();
                 line.lineWidth = 2;
                 line.color = color;
-                line.dash = [5, 5]; // 점선 스타일 (실선이 좋으면 이 줄을 삭제하세요)
+                line.dash = [5, 5]; 
                 advancedTexture.addControl(line);
-                line.linkWithMesh(mesh); // 선의 시작점을 메쉬에 고정
-                line.connectedControl = label; // 선의 끝점을 이름표 박스에 고정
+                line.linkWithMesh(mesh); 
+                line.connectedControl = label; 
             };
 
-            // ==========================================
             // 3. 모델 로드 및 앵커(타겟) 부착
-            // ==========================================
-            BABYLON.SceneLoader.ImportMeshAsync("", "./", "JadeToad.glb", scene).then((result) => {
+            // 💡 수정됨: 경로를 "./" 에서 "/" 로 변경하여 Vercel 라우팅 오류 방지
+            BABYLON.SceneLoader.ImportMeshAsync("", "/", "JadeToad.glb", scene).then((result) => {
                 camera.attachControl(canvas, false);
                 
                 var rootMesh = result.meshes[0];
                 rootMesh.position = BABYLON.Vector3.Zero();
                 camera.zoomOn(result.meshes, true);
-
-                // 💡 투명한 가짜 메쉬(구체)를 만들어서 원하는 부위에 심어줍니다.
-                // (수치를 변경하여 두꺼비의 실제 머리, 가슴, 배 위치에 맞게 조절하세요)
                 
                 // 머리 위치
                 var headAnchor = BABYLON.MeshBuilder.CreateSphere("head", {diameter: 0.1}, scene);
-                headAnchor.parent = rootMesh; // 두꺼비가 움직일 때 같이 움직이도록 종속시킴
-                headAnchor.position = new BABYLON.Vector3(0, 1.5, 0.8); // 👈 위치 X, Y, Z 조정 필요
-                headAnchor.isVisible = false; // 화면에는 안 보이게 숨김
+                headAnchor.parent = rootMesh; 
+                headAnchor.position = new BABYLON.Vector3(0, 1.5, 0.8); 
+                headAnchor.isVisible = false; 
 
                 // 가슴 위치
                 var chestAnchor = BABYLON.MeshBuilder.CreateSphere("chest", {diameter: 0.1}, scene);
                 chestAnchor.parent = rootMesh;
-                chestAnchor.position = new BABYLON.Vector3(0, 0.8, 1.0); // 👈 위치 조정 필요
+                chestAnchor.position = new BABYLON.Vector3(0, 0.8, 1.0); 
                 chestAnchor.isVisible = false;
 
                 // 배 위치
                 var abdomenAnchor = BABYLON.MeshBuilder.CreateSphere("abdomen", {diameter: 0.1}, scene);
                 abdomenAnchor.parent = rootMesh;
-                abdomenAnchor.position = new BABYLON.Vector3(0, 0.3, -0.5); // 👈 위치 조정 필요
+                abdomenAnchor.position = new BABYLON.Vector3(0, 0.3, -0.5); 
                 abdomenAnchor.isVisible = false;
 
-                // 만들어둔 함수를 호출하여 라벨 부착 (메쉬, 텍스트, X오프셋, Y오프셋, 색상)
                 createLabel(headAnchor, "머리", 120, -120, "Cyan");
                 createLabel(chestAnchor, "가슴", -150, -50, "Lime");
                 createLabel(abdomenAnchor, "배", 120, 80, "Yellow");
 
-                // ==========================================
                 // 4. 지시선 탄력 테스트용 이동 애니메이션
-                // ==========================================
                 var time = 0;
                 scene.onBeforeRenderObservable.add(function () {
-                    // 두꺼비를 위아래로 둥둥 떠다니게 함
                     rootMesh.position.y = Math.sin(time) * 0.5; 
-                    
-                    // 두꺼비를 좌우로 살짝 흔듦
                     rootMesh.position.x = Math.cos(time * 0.5) * 0.3; 
-                    
                     time += 0.05;
                 });
+            }).catch((error) => {
+                // 💡 추가됨: 파일 로드 실패 시 콘솔 에러 및 알림창 띄우기
+                console.error("3D 모델 로드 실패:", error);
+                alert("3D 모델(JadeToad.glb)을 불러오지 못했습니다. 파일 위치나 이름을 확인해주세요.");
             });
 
             return scene;
